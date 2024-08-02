@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@tanstack/vue-query": "^5.49.1",
-    "vue": "2.7.16",
+    "vue": "3.4.31",
     "vue-template-compiler": "2.7.16"
   },
   "devDependencies": {
