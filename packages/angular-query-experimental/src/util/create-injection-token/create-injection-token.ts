@@ -11,22 +11,20 @@
  */
 /* eslint-enable */
 
-import {
-  type EnvironmentProviders,
-  type FactoryProvider,
-  type Host,
-  type InjectOptions,
-  InjectionToken,
-  type Injector,
-  type Optional,
-  type Provider,
-  type Self,
-  type SkipSelf,
-  type Type,
-  inject,
-  runInInjectionContext,
-} from '@angular/core'
+import { InjectionToken, inject, runInInjectionContext } from '@angular/core'
 import { assertInjector } from '../assert-injector/assert-injector'
+import type {
+  EnvironmentProviders,
+  FactoryProvider,
+  Host,
+  InjectOptions,
+  Injector,
+  Optional,
+  Provider,
+  Self,
+  SkipSelf,
+  Type,
+} from '@angular/core'
 
 type CreateInjectionTokenDep<TTokenType> =
   | Type<TTokenType>
@@ -169,7 +167,7 @@ export function createNoopInjectionToken<
   type TReturn = TMulti extends true ? Array<TValue> : TValue
 
   const token =
-    // eslint-disable-next-line ts/no-unnecessary-condition
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     (options as CreateInjectionTokenOptions<() => void, []>)?.token ||
     new InjectionToken<TReturn>(description)
   return [
