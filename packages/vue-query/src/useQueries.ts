@@ -4,7 +4,9 @@ import {
   getCurrentScope,
   onScopeDispose,
   readonly,
+  shallowReadonly,
   shallowRef,
+  unref,
   watch,
 } from 'vue-demi'
 
@@ -255,6 +257,7 @@ export function useQueries<
   }: {
     queries: MaybeRefDeep<UseQueriesOptionsArg<T>>
     combine?: (result: UseQueriesResults<T>) => TCombinedResult
+    shallow?: boolean
   },
   queryClient?: QueryClient,
 ): Readonly<Ref<TCombinedResult>> {
@@ -268,22 +271,26 @@ export function useQueries<
 
   const client = queryClient || useQueryClient()
 
-  const defaultedQueries = computed(() =>
-    cloneDeepUnref(queries as MaybeRefDeep<UseQueriesOptionsArg<any>>).map(
-      (queryOptions) => {
-        if (typeof queryOptions.enabled === 'function') {
-          queryOptions.enabled = queryOptions.enabled()
-        }
+  const defaultedQueries = computed(() => {
+    // Only unref the top level array.
+    const queriesRaw = unref(queries) as ReadonlyArray<any>
 
-        const defaulted = client.defaultQueryOptions(queryOptions)
-        defaulted._optimisticResults = client.isRestoring.value
-          ? 'isRestoring'
-          : 'optimistic'
+    // Unref the rest for each element in the top level array.
+    return queriesRaw.map((queryOptions) => {
+      const clonedOptions = cloneDeepUnref(queryOptions)
 
-        return defaulted
-      },
-    ),
-  )
+      if (typeof clonedOptions.enabled === 'function') {
+        clonedOptions.enabled = queryOptions.enabled()
+      }
+
+      const defaulted = client.defaultQueryOptions(clonedOptions)
+      defaulted._optimisticResults = client.isRestoring.value
+        ? 'isRestoring'
+        : 'optimistic'
+
+      return defaulted
+    })
+  })
 
   const observer = new QueriesObserver<TCombinedResult>(
     client,
@@ -343,5 +350,9 @@ export function useQueries<
     unsubscribe()
   })
 
-  return readonly(state) as Readonly<Ref<TCombinedResult>>
+  return process.env.NODE_ENV === 'production'
+    ? state
+    : options.shallow
+      ? shallowReadonly(state)
+      : (readonly(state) as Readonly<Ref<TCombinedResult>>)
 }
